@@ -4,441 +4,561 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#000000">
-    <title>Neon Bounce - Fixed</title>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#05050a">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <title>Neon Escape Mobile</title>
     <style>
-        /* RESET & BASE */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        /* CSS RESET & MOBILE OPTIMIZATION */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+        
         body { 
-            background: #000; margin: 0; overflow: hidden; 
-            display: flex; justify-content: center; align-items: center; 
-            height: 100vh; width: 100vw; 
-            font-family: 'Arial Black', sans-serif; color: white;
-            touch-action: none; /* Empêche le zoom/scroll tactile */
+            background: #05050a; 
+            margin: 0; 
+            overflow: hidden; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            width: 100vw;
+            font-family: 'Arial Rounded MT Bold', sans-serif; 
+            color: white; 
+            touch-action: none; /* Empêche le scroll élastique sur mobile */
         }
-        canvas { display: block; width: 100%; height: 100%; }
+
+        canvas { 
+            box-shadow: 0 0 50px rgba(0,0,0,0.8); 
+            cursor: pointer;
+            display: block;
+        }
         
-        /* UI OVERLAY */
         .overlay { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            pointer-events: none; /* Laisse passer les clics vers le jeu si besoin */
-            z-index: 100; /* Très haut pour être au dessus du canvas */
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            transition: opacity 0.3s; 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            pointer-events: none; 
+            z-index: 10; 
         }
-        
-        /* MENU CARD */
+
         .menu-card { 
-            background: rgba(15, 15, 20, 0.9); 
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            padding: 30px; border-radius: 30px; 
-            border: 1px solid rgba(255, 255, 255, 0.2); 
-            pointer-events: auto; /* IMPORTANT: Réactive les clics sur la carte */
-            display: flex; flex-direction: column; gap: 15px; 
-            width: 85%; max-width: 350px; text-align: center;
-            box-shadow: 0 0 50px rgba(0, 242, 255, 0.2);
+            background: rgba(0, 0, 0, 0.85); 
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px);
+            padding: 25px; 
+            border-radius: 25px; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            pointer-events: auto; 
+            display: none; 
+            flex-direction: column; 
+            gap: 10px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7); 
+            width: 90%; /* Largeur responsive */
+            max-width: 380px;
+            max-height: 90vh;
+            overflow-y: auto;
         }
-
-        /* TEXTES */
-        h1 { 
-            margin: 0; font-size: 32px; 
-            background: linear-gradient(to right, #00f2ff, #ff00ff); 
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
-            text-transform: uppercase; letter-spacing: -1px; 
-            filter: drop-shadow(0 0 5px rgba(0,242,255,0.5)); 
-        }
-        p { color: #888; font-size: 12px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
-
-        /* BOUTONS */
-        button { 
-            padding: 20px; font-size: 18px; border: none; border-radius: 15px; cursor: pointer; 
-            font-weight: 900; text-transform: uppercase; width: 100%; color: #000;
-            transition: transform 0.1s; position: relative; overflow: hidden;
-            touch-action: manipulation;
-        }
-        button:active { transform: scale(0.95); }
-
-        .btn-play { background: #00f2ff; box-shadow: 0 0 20px rgba(0, 242, 255, 0.4); }
-        .btn-rec { background: #ff0055; color: white; box-shadow: 0 0 20px rgba(255, 0, 85, 0.4); }
-        .btn-menu { background: rgba(255,255,255,0.1); color: white; font-size: 14px; padding: 15px; }
-
-        /* HUD & INDICATORS */
-        #hud { position: absolute; top: 15%; width: 100%; text-align: center; pointer-events: none; z-index: 5; transition: opacity 0.3s; }
-        .score-big { font-size: 80px; font-weight: 900; color: rgba(255,255,255,0.1); -webkit-text-stroke: 1px rgba(255,255,255,0.2); }
         
-        .rec-dot { position: absolute; top: 30px; right: 30px; width: 15px; height: 15px; background: red; border-radius: 50%; display: none; box-shadow: 0 0 10px red; animation: blink 1s infinite; z-index: 200; }
-        @keyframes blink { 50% { opacity: 0; } }
-
-        #tuto-hint {
-            position: absolute; bottom: 20%; width: 100%; text-align: center; 
-            color: rgba(255,255,255,0.8); font-size: 14px; pointer-events: none;
-            text-shadow: 0 0 10px black; z-index: 5;
-            animation: pulse 1.5s infinite;
+        /* Boutons plus gros pour le tactile */
+        button { 
+            padding: 15px; 
+            font-size: 16px; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            transition: 0.2s; 
+            text-transform: uppercase; 
+            width: 100%; 
+            margin-bottom: 5px;
         }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 0.5; } }
+        
+        button:active { transform: scale(0.96); } /* Feedback tactile */
+
+        .btn-main { background: #ff4500; color: white; box-shadow: 0 0 15px #ff4500; margin-top: 10px; }
+        .btn-challenge { background: #ffd700; color: black; box-shadow: 0 0 15px #ffd700; }
+        .btn-asmr { background: #00e5ff; color: #000; box-shadow: 0 0 15px #00e5ff; margin-top: 5px; }
+        .btn-fill { background: linear-gradient(180deg, #00e5ff, #0051ff); color: white; border: 1px solid cyan; box-shadow: 0 0 25px blue; animation: pulse-blue 2s infinite; }
+        .btn-valentine { background: linear-gradient(45deg, #ff00cc, #ff3333); color: white; border: 1px solid #ff99cc; box-shadow: 0 0 20px #ff0066; margin-bottom: 5px; }
+        
+        .btn-doped { 
+            background: linear-gradient(45deg, #39ff14, #00c3ff); 
+            color: black; font-weight: 900; letter-spacing: 1px;
+            border: 2px solid #39ff14; 
+            box-shadow: 0 0 20px #39ff14, inset 0 0 10px #39ff14; 
+            margin-bottom: 10px; text-shadow: 0 0 5px rgba(255,255,255,0.5);
+        }
+
+        .btn-mode { background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2); }
+        .btn-nuclear { background: linear-gradient(45deg, #ff0000, #ff4500); color: white; border: 2px solid red; box-shadow: 0 0 20px red; animation: pulse-red 1s infinite; }
+        
+        .toggle-container {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255,255,255,0.1); padding: 12px 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.2);
+        }
+        .toggle-label { font-size: 14px; font-weight: bold; color: #ccc; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #444; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #00f2ff; box-shadow: 0 0 10px #00f2ff; }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        @keyframes pulse-blue { 0% { box-shadow: 0 0 15px blue; } 50% { box-shadow: 0 0 30px cyan; } 100% { box-shadow: 0 0 15px blue; } }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 10px red; } 50% { box-shadow: 0 0 25px red; transform: scale(1.03); } 100% { box-shadow: 0 0 10px red; } }
+        
+        h1 { margin: 5px 0 10px 0; font-size: 24px; text-align: center; text-shadow: 0 0 10px currentColor; }
+        p { color: #aaa; font-size: 12px; text-align: center; margin-bottom: 15px; }
+
+        #hud-display { position: absolute; top: env(safe-area-inset-top, 20px); width: 100%; text-align: center; pointer-events: none; display: none; z-index: 5; margin-top: 10px;}
+        .hud-timer { font-size: 32px; font-weight: bold; color: #ffd700; text-shadow: 0 0 10px #ffd700; }
+        .hud-count { font-size: 16px; color: #fff; letter-spacing: 2px; margin-top: 5px; opacity: 0.8; }
+        #hud-menu-btn { pointer-events: auto; cursor: pointer; margin: 10px auto 0 auto; width: fit-content; padding: 8px 20px; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; font-size: 14px; color: #ccc; background: rgba(0,0,0,0.5); }
+        #speed-indicator { font-size: 10px; color: #ff4500; margin-top: 2px; letter-spacing: 1px; }
+
     </style>
 </head>
 <body>
 
     <canvas id="gameCanvas"></canvas>
-    
-    <div class="rec-dot" id="recDot"></div>
-    <div id="hud"><div class="score-big" id="scoreVal">0</div></div>
-    <div id="tuto-hint" style="display: none;">TAP POUR SAUTER</div>
 
-    <div class="overlay" id="mainMenu">
-        <div class="menu-card" id="startCard">
-            <h1>NEON JUMP</h1>
-            <p>TIKTOK EDITION</p>
-            <button class="btn-play" onclick="startGame('NORMAL')">JOUER</button>
-            <button class="btn-rec" onclick="startRecording()">🎥 MODE RECORD</button>
+    <div id="hud-display">
+        <div class="hud-timer" id="timerValue">00:00.00</div>
+        <div class="hud-count">COUCHES : <span id="layerCount">0</span></div>
+        <div id="speed-indicator">VITESSE : <span id="speedVal">100%</span></div>
+        <div id="hud-menu-btn" ontouchstart="pauseChallenge(); event.preventDefault()">PAUSE</div>
+    </div>
+
+    <div class="overlay" id="uiOverlay">
+        <div id="homeScreen" class="menu-card" style="display: flex;">
+            <h1 style="color:#ff4500">ESCAPE BALL</h1>
+            <p>LE CHOC DES TITANS</p>
+            <button class="btn-main" onclick="showModes()">MODES CLASSIQUES</button>
+            <button class="btn-challenge" style="margin-top:10px" onclick="showChallengeMenu()">⚡ CHALLENGE SPEED</button>
         </div>
-        
-        <div class="menu-card" id="gameOverCard" style="display:none">
-            <h1 style="color:#ff0055; -webkit-text-fill-color: #ff0055;">FAIL</h1>
-            <p id="finalScore">SCORE: 0</p>
-            <button class="btn-play" onclick="startGame('NORMAL')">REJOUER</button>
-            <button class="btn-menu" onclick="showHome()">MENU</button>
+
+        <div id="modeScreen" class="menu-card">
+            <h1 style="color:#ff4500">MODES</h1>
+            
+            <div class="toggle-container">
+                <span class="toggle-label">🌀 RÉTRÉCISSEMENT</span>
+                <label class="switch">
+                    <input type="checkbox" id="shrinkToggle" onchange="toggleShrink()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <button class="btn-doped" onclick="startGame('DOPED')">💉 ADRENALINE</button>
+            <button class="btn-valentine" onclick="startGame('VALENTINE')">💖 SAINT VALENTIN</button>
+            
+            <button class="btn-main" onclick="showDestructionLevels()">💥 DESTRUCTION</button>
+            <button class="btn-asmr" onclick="showAsmrLevels()">💧 ASMR LIQUIDE</button>
+            <button class="btn-mode" onclick="startGame('NEON')">✨ NEON VIBE</button>
+            <button class="btn-mode" onclick="startGame('PATTERN')">🌀 HYPNOTIQUE</button>
+            <button class="btn-sec" style="margin-top:10px; background:none; color:#aaa; border:none" onclick="showHome()">RETOUR</button>
+        </div>
+
+        <div id="destructionScreen" class="menu-card">
+            <h1 style="color:#ff4500;">EXPLOSION</h1>
+            <button class="btn-mode" onclick="startDestructionGame(20)">SOFT (20)</button>
+            <button class="btn-main" onclick="startDestructionGame(200)">CHAOS (200)</button>
+            <button class="btn-nuclear" onclick="startDestructionGame(2000)">☢️ NUCLÉAIRE</button>
+            <button class="btn-sec" style="margin-top:10px; background:none; color:#aaa; border:none" onclick="showModes()">RETOUR</button>
+        </div>
+
+        <div id="asmrScreen" class="menu-card">
+            <h1 style="color:#00e5ff;">ASMR FLUIDE</h1>
+            <button class="btn-mode" onclick="startAsmrGame(50)">💧 GOUTTES</button>
+            <button class="btn-asmr" onclick="startAsmrGame(300)">🌊 TORRENT</button>
+            <button class="btn-fill" onclick="startAsmrGame('FILL')">🛁 BASSIN (MAX)</button>
+            <button class="btn-sec" style="margin-top:10px; background:none; color:#aaa; border:none" onclick="showModes()">RETOUR</button>
+        </div>
+
+        <div id="challengeScreen" class="menu-card">
+            <h1 style="color:#ffd700">DIFFICULTÉ</h1>
+            <button class="btn-mode" onclick="startChallenge(50)">50 CERCLES</button>
+            <button class="btn-mode" onclick="startChallenge(100)">100 CERCLES</button>
+            <button class="btn-mode" onclick="startChallenge(150)">150 CERCLES</button>
+            <button class="btn-sec" style="margin-top:10px; background:none; color:#aaa; border:none" onclick="showHome()">RETOUR</button>
+        </div>
+
+        <div id="pauseMenu" class="menu-card">
+            <h1>PAUSE</h1>
+            <button class="btn-main" onclick="resumeGame()">Continuer</button>
+            <button class="btn-sec" onclick="restartGame()">Recommencer</button>
+            <button class="btn-sec" onclick="showHome()">Accueil</button>
         </div>
     </div>
 
 <script>
-    // --- AUDIO ENGINE ---
-    // On initialise l'audio MAIS on ne le démarre qu'au clic pour éviter les blocages navigateur
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    let audioCtx = new AudioContext();
+// --- AUDIO SYSTEM ---
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(freq, type, duration, volume) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.5, audioCtx.currentTime + duration);
+    gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
+}
+// Raccourcis sons
+function playHeartSound() { playSound(300, 'sine', 0.5, 0.2); setTimeout(() => playSound(600, 'sine', 0.5, 0.1), 100); }
+function playDopedSound() { playSound(150, 'sawtooth', 0.1, 0.4); setTimeout(() => playSound(1200, 'square', 0.15, 0.3), 20); }
+function playExplosionSound(intensity) { 
+    if (intensity > 500) { playSound(80, 'sawtooth', 0.5, 0.8); setTimeout(() => playSound(600, 'square', 0.3, 0.4), 50); }
+    else { playSound(150, 'square', 0.2, 0.5); setTimeout(() => playSound(500, 'sawtooth', 0.1, 0.3), 50); }
+}
+function playLiquidSound() { playSound(400, 'sine', 0.3, 0.3); setTimeout(() => playSound(300, 'sine', 0.4, 0.2), 50); }
+function playClickSound() { playSound(800, 'sine', 0.05, 0.1); }
 
-    function playSound(type) {
-        if (!audioCtx) return;
-        // On essaie de resume si c'est suspendu (nécessaire sur Chrome/iOS)
-        if (audioCtx.state === 'suspended') audioCtx.resume().catch(e => console.log(e));
+// --- ENGINE SETUP FOR MOBILE ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        const now = audioCtx.currentTime;
+// Référence virtuelle (Le jeu est codé pour cette taille, on va l'adapter)
+const VIRTUAL_WIDTH = 450;
+const VIRTUAL_HEIGHT = 800;
+let scaleRatio = 1;
+let CENTER = { x: VIRTUAL_WIDTH / 2, y: VIRTUAL_HEIGHT / 2 };
 
-        if (type === 'jump') {
-            osc.frequency.setValueAtTime(200, now);
-            osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
-            gain.gain.setValueAtTime(0.2, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.1);
-            osc.type = 'sine';
-        } else if (type === 'crash') {
-            osc.frequency.setValueAtTime(100, now);
-            osc.frequency.linearRampToValueAtTime(0, now + 0.3);
-            gain.gain.setValueAtTime(0.5, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-            osc.type = 'sawtooth';
-        } else if (type === 'score') {
-            osc.frequency.setValueAtTime(800, now);
-            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
-            gain.gain.setValueAtTime(0.2, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.1);
-            osc.type = 'sine';
-        }
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(now + 0.4);
-    }
-
-    // --- GAME VARIABLES ---
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+// Redimensionnement intelligent
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     
-    let width, height, centerX, centerY;
-    let gameState = "MENU"; // MENU, PLAYING, GAMEOVER
-    let isRecording = false;
-    let frame = 0;
-    let score = 0;
-
-    // Physics
-    let ball = { x: 0, y: 0, vx: 0, vy: 0, radius: 12 };
-    let gravity = 0.35;
-    let jumpForce = -9;
+    // Calcul de l'échelle pour tout faire rentrer (Letterboxing "Contain")
+    // Ou "Cover" pour plein écran. Ici on utilise une logique qui centre le jeu.
+    scaleRatio = Math.min(canvas.width / VIRTUAL_WIDTH, canvas.height / VIRTUAL_HEIGHT);
     
-    // Arrays
-    let rings = [];
-    let particles = [];
+    // On peut aussi décider de remplir la largeur sur mobile (souvent mieux)
+    if (canvas.width < VIRTUAL_WIDTH) {
+         scaleRatio = canvas.width / VIRTUAL_WIDTH;
+    }
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas(); // Init
+
+// --- VARIABLES JEU ---
+let particles = [];
+let ball, rings, gameState = "HOME", currentMode = "NEON", frame = 0;
+let startTime = 0, challengeCount = 0;
+let destructionLevel = 200; asmrLevel = 50; isFillMode = false;
+let bgLetter = ""; let bgLetterAlpha = 0; const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+let isShrinkEnabled = false;
+
+// --- PARTICLE CLASSES (Gardées identiques mais optimisées visuellement) ---
+class Particle {
+    constructor(x, y, color, radius, vx, vy, lifeSpan, isLiquid, isFillMode, isHeart, isSyringe) {
+        this.x = x; this.y = y; this.color = color; this.radius = radius;
+        this.vx = vx; this.vy = vy; 
+        this.lifeSpan = lifeSpan; this.life = lifeSpan;
+        this.isLiquid = isLiquid; this.isFillMode = isFillMode;
+        this.isHeart = isHeart; this.isSyringe = isSyringe;
+        this.settled = false; this.settledOffset = Math.random() * 100;
+    }
+    update(rings, frame) {
+        if (this.settled && this.isFillMode) { this.x += Math.sin((frame + this.settledOffset) * 0.05) * 0.5; return; }
+        // Physique simplifiée
+        if (this.isLiquid || this.isFillMode) this.vy += 0.15;
+        else if (this.isHeart || this.isSyringe) this.vy += 0.02;
+        else this.vy += 0.1;
+
+        this.x += this.vx; this.y += this.vy;
+        
+        // Collisions sol (virtuel)
+        if (this.isFillMode) {
+            this.vx *= 0.96; 
+            let floorLevel = VIRTUAL_HEIGHT - (particles.indexOf(this) * 0.012); // Utilise Hauteur Virtuelle
+            if (floorLevel > VIRTUAL_HEIGHT) floorLevel = VIRTUAL_HEIGHT;
+            if (this.y > floorLevel - this.radius) { this.y = floorLevel - this.radius; this.vy = 0; this.vx = 0; this.settled = true; }
+        }
+        else if (this.isLiquid) {
+            this.vx *= 0.98; this.vy *= 0.98;
+            const distFromCenter = Math.sqrt((this.x - CENTER.x)**2 + (this.y - CENTER.y)**2);
+            for (let ring of rings) {
+                if (!ring.active) continue;
+                if (Math.abs(distFromCenter - ring.radius) < this.radius + 2) {
+                    const angle = Math.atan2(this.y - CENTER.y, this.x - CENTER.x);
+                    this.x = CENTER.x + Math.cos(angle) * ring.radius;
+                    this.y = CENTER.y + Math.sin(angle) * ring.radius;
+                    this.vx *= 0.8; this.vy *= 0.8;
+                    break;
+                }
+            }
+        }
+        else { this.vx *= 0.96; this.vy *= 0.96; } // Friction par défaut
+
+        if (this.isSyringe) { this.vx *= 0.92; this.vy *= 0.92; } // Extra frein seringue
+        
+        if (!this.settled) { 
+            this.life--; 
+            if (this.isLiquid) this.radius = Math.max(0, this.radius * 0.99);
+            else this.radius = Math.max(0, this.radius * 0.95);
+        }
+    }
+    draw(ctx) {
+        ctx.beginPath(); ctx.fillStyle = this.color; 
+        if (!this.settled) ctx.globalAlpha = Math.pow(this.life / this.lifeSpan, 2);
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+    }
+}
+
+function createExplosion(x, y, color, numParticles, strength, isLiquid, isFillMode, isHeart, isSyringe) {
+    // Limite particules pour mobile pour éviter le lag
+    const MAX_PARTICLES = 3000; 
+    if (isFillMode && particles.length + numParticles > MAX_PARTICLES) particles.splice(0, (particles.length + numParticles) - MAX_PARTICLES);
+
+    // Adaptations spécifiques (Code identique à l'original mais factorisé)
+    for (let i = 0; i < numParticles; i++) {
+        let vx, vy, life, size;
+        if (isHeart) {
+            const t = (i / numParticles) * Math.PI * 2;
+            const hx = 16 * Math.pow(Math.sin(t), 3);
+            const hy = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+            vx = hx * 0.15 + (Math.random() - 0.5); vy = hy * 0.15 + (Math.random() - 0.5);
+            life = 80 + Math.random() * 40; size = Math.random() * 3 + 2;
+            particles.push(new Particle(x, y, color, size, vx, vy, life, false, false, true, false));
+        } 
+        else if (isSyringe) {
+             const angleOffset = Math.random() * Math.PI * 2; 
+             const scale = 1.5; 
+             let sx, sy; const rand = Math.random();
+             if (rand < 0.6) { sx = (Math.random() - 0.5) * 15 * scale; sy = (Math.random() - 0.5) * 40 * scale; } 
+             else if (rand < 0.85) { sx = (Math.random() - 0.5) * 3 * scale; sy = -20 * scale - Math.random() * 30 * scale; } 
+             else { sx = (Math.random() - 0.5) * 30 * scale; sy = 20 * scale + Math.random() * 5 * scale; }
+             const rx = sx * Math.cos(angleOffset) - sy * Math.sin(angleOffset);
+             const ry = sx * Math.sin(angleOffset) + sy * Math.cos(angleOffset);
+             particles.push(new Particle(x + rx, y + ry, color, Math.random()*3+1, rx * 0.05, ry * 0.05, 100, false, false, false, true));
+        }
+        else {
+            const angle = Math.random() * Math.PI * 2; 
+            const speed = Math.random() * strength;
+            size = (isLiquid || isFillMode) ? (Math.random() * 3 + 2) : (Math.random() * 3 + 1); 
+            life = isFillMode ? 9999 : (isLiquid ? (100 + Math.random() * 100) : (30 + Math.random() * 30)); 
+            particles.push(new Particle(x, y, color, size, Math.cos(angle) * speed, Math.sin(angle) * speed, life, isLiquid, isFillMode, false, false));
+        }
+    }
+}
+
+// --- GAME LOGIC ---
+function toggleShrink() { isShrinkEnabled = document.getElementById('shrinkToggle').checked; }
+
+function initData(mode, count = 10, fillMode = false) {
+    currentMode = mode; frame = 0; particles = []; isFillMode = fillMode; 
+    ball = { x: CENTER.x, y: CENTER.y - 30, vx: 4, vy: 0, radius: 10, hue: 0 };
+    rings = []; bgLetter = ""; bgLetterAlpha = 0;
     
-    // Effects
-    let shake = 0;
-    let flash = 0;
-
-    // --- RESIZE ---
-    function resize() {
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = width;
-        canvas.height = height;
-        centerX = width / 2;
-        centerY = height / 2;
+    let ringCount = (isShrinkEnabled && mode !== 'CHALLENGE') ? 8 : 10;
+    if (mode === 'CHALLENGE') {
+        challengeCount = count; 
+        for(let i=0; i < count; i++) rings.push(createRing(70 + i * 25, i));
+        startTime = Date.now(); document.getElementById('hud-display').style.display = 'block';
+    } else {
+        for(let i=0; i < ringCount; i++) rings.push(createRing(70 + i * 35, i));
+        document.getElementById('hud-display').style.display = 'none';
     }
-    window.addEventListener('resize', resize);
-    resize();
+}
 
-    // --- GAME LOGIC ---
+function createRing(radius, index) {
+    return { radius: radius, angle: Math.random() * Math.PI * 2, speed: (0.02 + Math.random() * 0.015) * (index % 2 === 0 ? 1 : -1), gapSize: 0.5, active: true, hue: (index * 40) % 360 };
+}
 
-    function createRing(index) {
-        return {
-            z: 300 + (index * 250), // Distance simulée
-            angle: 0,
-            rotSpeed: (Math.random() * 0.04 + 0.01) * (Math.random() < 0.5 ? 1 : -1),
-            gapAngle: Math.random() * Math.PI * 2,
-            gapSize: 1.2, // Taille du trou
-            hue: (index * 20) % 360,
-            passed: false
-        };
-    }
+// --- MENU NAVIGATION ---
+function hideAllMenus() {
+    const menus = document.querySelectorAll('.menu-card');
+    menus.forEach(m => m.style.display = 'none');
+}
+function showModes() { hideAllMenus(); document.getElementById('modeScreen').style.display = "flex"; }
+function showDestructionLevels() { hideAllMenus(); document.getElementById('destructionScreen').style.display = "flex"; }
+function showAsmrLevels() { hideAllMenus(); document.getElementById('asmrScreen').style.display = "flex"; }
+function showChallengeMenu() { hideAllMenus(); document.getElementById('challengeScreen').style.display = "flex"; }
+function showHome() { 
+    gameState = "HOME"; hideAllMenus(); 
+    document.getElementById('homeScreen').style.display = "flex"; 
+    document.getElementById('hud-display').style.display = 'none'; 
+    updateUI(); 
+}
 
-    function initGame() {
-        rings = [];
-        particles = [];
-        score = 0;
-        frame = 0;
-        ball.y = 0;
-        ball.vy = 0;
-        ball.vx = 0;
+function startGame(mode) { initData(mode, 10, false); gameState = "PLAYING"; hideAllMenus(); updateUI(); audioCtx.resume(); }
+function startDestructionGame(level) { destructionLevel = level; startGame('DESTRUCTION'); }
+function startAsmrGame(level) { let fill = (level === 'FILL'); if(fill) asmrLevel = 100; else asmrLevel = level; initData('ASMR', 10, fill); gameState = "PLAYING"; hideAllMenus(); updateUI(); audioCtx.resume(); }
+function startChallenge(count) { initData('CHALLENGE', count, false); gameState = "PLAYING"; hideAllMenus(); updateUI(); audioCtx.resume(); }
+
+function pauseChallenge() { if(gameState === "PLAYING") { gameState = "PAUSED"; updateUI(); } }
+function resumeGame() { gameState = "PLAYING"; updateUI(); }
+function restartGame() { 
+    if(currentMode === 'CHALLENGE') startChallenge(challengeCount); 
+    else if(currentMode === 'DESTRUCTION') startDestructionGame(destructionLevel);
+    else if(currentMode === 'ASMR') startAsmrGame(isFillMode ? 'FILL' : asmrLevel);
+    else startGame(currentMode); 
+}
+function updateUI() { document.getElementById('pauseMenu').style.display = (gameState === "PAUSED") ? "flex" : "none"; }
+
+// --- INPUT HANDLING (MOBILE & MOUSE) ---
+function handleInput(clientX, clientY) {
+    if(gameState === "PLAYING" && currentMode === 'CHALLENGE') {
+        // Convertir les coordonnées écran en coordonnées jeu virtuelles
+        const rect = canvas.getBoundingClientRect();
         
-        // Initial rings
-        for (let i = 0; i < 5; i++) {
-            rings.push(createRing(i));
+        // Calcul du décalage dû au centrage du canvas (si letterbox)
+        const offsetX = (canvas.width - VIRTUAL_WIDTH * scaleRatio) / 2;
+        const offsetY = (canvas.height - VIRTUAL_HEIGHT * scaleRatio) / 2;
+        
+        const gameX = (clientX - rect.left - offsetX) / scaleRatio;
+        const gameY = (clientY - rect.top - offsetY) / scaleRatio;
+
+        const distToCenter = Math.sqrt((ball.x - CENTER.x)**2 + (ball.y - CENTER.y)**2);
+        let targetRing = rings.find(r => r.active && r.radius > distToCenter);
+        
+        if (targetRing) {
+            playClickSound();
+            const growthAmount = 0.08;
+            if(gameX > CENTER.x) targetRing.gapSize += growthAmount;
+            else { targetRing.angle -= growthAmount; targetRing.gapSize += growthAmount; }
         }
-        
-        document.getElementById('scoreVal').innerText = score;
-        if (!isRecording) document.getElementById('tuto-hint').style.display = 'block';
+        return;
+    }
+    if(gameState === "PLAYING") { gameState = "PAUSED"; updateUI(); }
+}
+
+canvas.addEventListener('mousedown', (e) => handleInput(e.clientX, e.clientY));
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // Stop scroll
+    handleInput(e.touches[0].clientX, e.touches[0].clientY);
+}, {passive: false});
+
+// --- MAIN LOOP ---
+function update() {
+    if (gameState !== "PLAYING") return;
+    frame++; ball.vy += 0.25; ball.x += ball.vx; ball.y += ball.vy; ball.hue += 1.5;
+    if(bgLetterAlpha > 0) bgLetterAlpha -= 0.015;
+
+    let currentShrinkSpeed = 0.08; 
+    
+    if (currentMode === 'CHALLENGE') {
+        const elapsed = (Date.now() - startTime) / 1000;
+        document.getElementById('timerValue').innerText = elapsed.toFixed(2).replace('.', ':');
+        const activeCount = rings.filter(r => r.active).length;
+        document.getElementById('layerCount').innerText = activeCount;
+        const clearedCount = challengeCount - activeCount;
+        const multiplier = Math.pow(1.02, Math.floor(clearedCount / 5));
+        currentShrinkSpeed = 0.08 * multiplier;
+        document.getElementById('speedVal').innerText = Math.round(multiplier * 100) + "%";
+        if (activeCount === 0) { alert(`VICTOIRE !\nTemps : ${elapsed.toFixed(2)}s`); showHome(); return; }
     }
 
-    // EXPOSER LES FONCTIONS GLOBALES (Pour que le HTML les trouve)
-    window.startGame = function(mode) {
-        // Débloquer l'audio
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+    const dx = ball.x - CENTER.x, dy = ball.y - CENTER.y, dist = Math.sqrt(dx*dx + dy*dy);
 
-        gameState = "PLAYING";
-        
-        // UI Updates
-        document.getElementById('startCard').style.display = 'none';
-        document.getElementById('gameOverCard').style.display = 'none';
-        document.getElementById('mainMenu').style.display = 'none';
-        document.getElementById('hud').style.opacity = '1';
-        
-        initGame();
-        
-        // Mode Hyper automatique pour Record
-        if (mode === 'HYPER') gravity = 0.45; 
-        else gravity = 0.35;
-    };
+    for (let i = rings.length - 1; i >= 0; i--) {
+        let ring = rings[i];
+        if (!ring.active) continue;
 
-    window.startRecording = function() {
-        isRecording = true;
-        document.getElementById('hud').style.opacity = '0';
-        document.getElementById('recDot').style.display = 'block';
-        window.startGame('HYPER');
-    };
-
-    window.showHome = function() {
-        gameState = "MENU";
-        isRecording = false;
-        document.getElementById('mainMenu').style.display = 'flex';
-        document.getElementById('startCard').style.display = 'flex';
-        document.getElementById('gameOverCard').style.display = 'none';
-        document.getElementById('hud').style.opacity = '1';
-        document.getElementById('recDot').style.display = 'none';
-        document.getElementById('tuto-hint').style.display = 'none';
-    };
-
-    function gameOver() {
-        if (isRecording) {
-            // Mode immortalité pour l'enregistrement
-            ball.y = 0; ball.vy = 0; 
-            shake = 20; playSound('crash'); flash = 0.5;
-        } else {
-            gameState = "GAMEOVER";
-            playSound('crash');
-            shake = 20;
-            document.getElementById('mainMenu').style.display = 'flex';
-            document.getElementById('gameOverCard').style.display = 'flex';
-            document.getElementById('finalScore').innerText = "SCORE: " + score;
-            document.getElementById('tuto-hint').style.display = 'none';
-        }
-    }
-
-    // --- INPUTS ---
-    function jump() {
-        if (gameState !== "PLAYING") return;
-        ball.vy = jumpForce;
-        ball.vx = (Math.random() - 0.5) * 4; // Petit mouvement aléatoire X
-        playSound('jump');
-        
-        // Particules de saut
-        for(let i=0; i<5; i++) {
-            particles.push({
-                x: centerX + ball.x, y: centerY + ball.y,
-                vx: (Math.random() - 0.5) * 5, vy: (Math.random() * 5) + 2,
-                life: 1, color: '#fff', size: Math.random()*3
-            });
-        }
-        document.getElementById('tuto-hint').style.display = 'none';
-    }
-
-    window.addEventListener('mousedown', jump);
-    window.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); }, {passive: false});
-
-    // --- LOOP ---
-    function update() {
-        if (gameState === "MENU") {
-            frame++;
-            ball.y = Math.sin(frame * 0.05) * 15; // Animation idle
-            return;
-        }
-        if (gameState !== "PLAYING") return;
-
-        // Physics
-        ball.vy += gravity;
-        ball.y += ball.vy;
-        ball.x += ball.vx;
-        ball.vx *= 0.95; // Friction
-
-        // Effects decay
-        shake *= 0.9;
-        flash *= 0.9;
-
-        // Rings Logic
-        let speed = isRecording ? 5 : 4; 
-        
-        for (let i = rings.length - 1; i >= 0; i--) {
-            let r = rings[i];
-            r.z -= speed;
-            r.angle += r.rotSpeed;
-
-            if (r.z < -100) {
-                rings.splice(i, 1);
-                rings.push(createRing(score + 5));
+        if (isShrinkEnabled || currentMode === "CHALLENGE") {
+            const speed = (currentMode === "CHALLENGE") ? currentShrinkSpeed : 0.15;
+            ring.radius -= speed;
+            if (ring.radius < 20) {
+                if(currentMode !== "CHALLENGE") { rings.splice(i, 1); rings.push(createRing(300, frame)); } 
+                else { ring.active = false; }
                 continue;
             }
+        }
+        ring.angle += (currentMode === "PATTERN") ? Math.sin(frame * 0.02 + i) * 0.04 : ring.speed;
 
-            // Collision (Approximation tunnel)
-            // On vérifie si l'anneau est au niveau de la balle
-            if (Math.abs(r.z) < 20 && !r.passed) {
-                // Angle Balle
-                let ballAngle = Math.atan2(ball.y, ball.x); // Normalement c'est X,Y mais ici c'est visuel
-                // En réalité dans ce jeu, "ball.y" est la hauteur (donc Y), et X est 0 au centre.
-                // Simplification : On check juste si la balle est "trop loin" du centre quand l'anneau passe
-                // Mais pour ce style de jeu, il faut que la balle soit dans le "Gap".
-                
-                // Calculons l'angle de la balle autour du centre (0,0)
-                let bAng = Math.atan2(ball.y, ball.x);
-                if(bAng < 0) bAng += Math.PI * 2;
+        if (dist + ball.radius > ring.radius) {
+            let angleBall = (Math.atan2(dy, dx) + Math.PI * 2) % (Math.PI * 2);
+            let startGap = (ring.angle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+            let endGap = (startGap + ring.gapSize) % (Math.PI * 2);
+            let inGap = startGap < endGap ? (angleBall > startGap && angleBall < endGap) : (angleBall > startGap || angleBall < endGap);
 
-                // Gap actuel
-                let gStart = (r.gapAngle + r.angle) % (Math.PI * 2);
-                if(gStart < 0) gStart += Math.PI * 2;
-                let gEnd = (gStart + r.gapSize) % (Math.PI * 2);
-
-                let distFromCenter = Math.sqrt(ball.x*ball.x + ball.y*ball.y);
-                let ringRadiusVisual = 150; // Rayon visuel au moment du passage
-
-                // Si on est DANS le rayon de collision
-                if (distFromCenter > 15) { // Si on n'est pas au centre parfait
-                    let inGap = false;
-                    if (gStart < gEnd) inGap = (bAng > gStart && bAng < gEnd);
-                    else inGap = (bAng > gStart || bAng < gEnd);
-
-                    if (!inGap) {
-                        // CRASH
-                        gameOver();
+            if (inGap) {
+                if (dist > ring.radius + ball.radius) {
+                    ring.active = false;
+                    if (!isShrinkEnabled && currentMode !== "CHALLENGE") ball.radius += 0.6;
+                    
+                    if (currentMode === "VALENTINE") {
+                        bgLetter = alphabet[Math.floor(Math.random() * alphabet.length)]; bgLetterAlpha = 1.0;
+                        createExplosion(ball.x, ball.y, `hsl(${ring.hue}, 100%, 70%)`, 80, 0, false, false, true, false);
+                        playHeartSound();
+                    } else if (currentMode === "DOPED") {
+                        bgLetter = alphabet[Math.floor(Math.random() * alphabet.length)]; bgLetterAlpha = 1.0;
+                        createExplosion(ball.x, ball.y, `hsl(${ring.hue}, 100%, 60%)`, 120, 0, false, false, false, true);
+                        playDopedSound();
+                    } else if (currentMode === "ASMR") {
+                        let count = asmrLevel; if (isFillMode) count = Math.floor((ring.radius**2)/20);
+                        createExplosion(ball.x, ball.y, `hsl(${ring.hue}, 100%, 60%)`, count, isFillMode ? 12 : 5, true, isFillMode, false, false);
+                        playLiquidSound();
+                    } else {
+                         let count = (currentMode === "DESTRUCTION") ? destructionLevel : 20;
+                         createExplosion(ball.x, ball.y, `hsl(${ring.hue}, 100%, 70%)`, count, 10, false, false, false, false);
+                         playSound(600, 'triangle', 0.1, 0.1);
                     }
                 }
-                
-                if (gameState === "PLAYING") {
-                    r.passed = true;
-                    score++;
-                    document.getElementById('scoreVal').innerText = score;
-                    playSound('score');
-                    flash = 0.3;
-                }
+            } else {
+                const nx = dx / dist, ny = dy / dist, dot = ball.vx * nx + ball.vy * ny;
+                ball.vx = (ball.vx - 2 * dot * nx) * 0.95; ball.vy = (ball.vy - 2 * dot * ny) * 0.95;
+                ball.x -= nx * ((dist + ball.radius) - ring.radius + 2); ball.y -= ny * ((dist + ball.radius) - ring.radius + 2);
+                playSound(150 + (dist * 0.5), 'sine', 0.1, 0.15);
             }
         }
-
-        // Particles
-        for (let i = particles.length - 1; i >= 0; i--) {
-            let p = particles[i];
-            p.x += p.vx; p.y += p.vy; p.life -= 0.05;
-            if(p.life <= 0) particles.splice(i, 1);
-        }
-
-        // Death by falling off screen
-        if (Math.abs(ball.y) > height/2 + 50) gameOver();
     }
+    
+    for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update(rings, frame); 
+        if (particles[i].life <= 0 || (!isFillMode && particles[i].radius < 0.1)) particles.splice(i, 1);
+    }
+    if (dist > VIRTUAL_HEIGHT + 100) showHome();
+}
 
-    function draw() {
-        ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, width, height);
+function draw() {
+    // Gestion du Scale pour Mobile : On efface tout, on sauvegarde, on scale, on dessine, on restore.
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform pour clear tout l'écran
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    if (currentMode === "VALENTINE") ctx.fillStyle = 'rgba(20, 0, 5, 0.3)';
+    else ctx.fillStyle = (currentMode === "MINIMAL") ? 'rgba(240, 240, 240, 0.4)' : 'rgba(5, 5, 15, 0.25)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height); // Fond remplit tout l'écran
 
-        // Motion Blur Trail
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.fillRect(0,0,width,height);
+    // Centrage du jeu virtuel dans l'écran physique
+    const offsetX = (canvas.width - VIRTUAL_WIDTH * scaleRatio) / 2;
+    const offsetY = (canvas.height - VIRTUAL_HEIGHT * scaleRatio) / 2;
 
-        ctx.save();
-        // Shake
-        let dx = (Math.random() - 0.5) * shake;
-        let dy = (Math.random() - 0.5) * shake;
-        ctx.translate(centerX + dx, centerY + dy);
+    ctx.save();
+    ctx.translate(offsetX, offsetY);
+    ctx.scale(scaleRatio, scaleRatio);
 
-        // Rings (Tunnel Effect)
-        rings.forEach(r => {
-            let radius = r.z; // Simple perspective : Z = Rayon
-            if (radius < 10) return;
-            
+    if (gameState !== "HOME") {
+        if (bgLetterAlpha > 0) {
+            ctx.save(); ctx.globalAlpha = bgLetterAlpha;
+            ctx.fillStyle = (currentMode === "VALENTINE") ? "#ff6699" : "#39ff14";
+            ctx.font = "bold 300px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText(bgLetter, CENTER.x, CENTER.y); ctx.restore();
+        }
+        rings.forEach((ring) => {
+            if (!ring.active) return;
             ctx.beginPath();
-            ctx.lineWidth = Math.max(2, 2000 / radius); // Plus épais quand proche
-            ctx.strokeStyle = `hsl(${r.hue}, 100%, 50%)`;
-            ctx.shadowBlur = 15; ctx.shadowColor = ctx.strokeStyle;
-            
-            // Draw arc minus gap
-            let start = r.gapAngle + r.angle + r.gapSize;
-            let end = r.gapAngle + r.angle;
-            
-            // On ne dessine pas si c'est derrière la caméra
-            ctx.arc(0, 0, radius, start, end);
-            ctx.stroke();
-            ctx.shadowBlur = 0;
+            ctx.strokeStyle = `hsl(${ring.hue}, 100%, 50%)`;
+            if (currentMode === "VALENTINE") ctx.strokeStyle = ["#ff0066", "#ff3333"][Math.floor(Math.random()*2)];
+            ctx.lineWidth = 6; ctx.shadowBlur = 15; ctx.shadowColor = ctx.strokeStyle;
+            ctx.arc(CENTER.x, CENTER.y, ring.radius, ring.angle + ring.gapSize, ring.angle);
+            ctx.stroke(); ctx.shadowBlur = 0;
         });
-
-        // Ball
-        ctx.fillStyle = 'white';
         ctx.beginPath();
-        ctx.shadowBlur = 20; ctx.shadowColor = 'white';
+        ctx.fillStyle = `hsl(${ball.hue}, 100%, 75%)`;
+        ctx.shadowBlur = 25; ctx.shadowColor = ctx.fillStyle;
         ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        // Particles
-        particles.forEach(p => {
-            ctx.fillStyle = p.color;
-            ctx.globalAlpha = p.life;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-            ctx.fill();
-        });
-        ctx.globalAlpha = 1;
-
-        ctx.restore();
-
-        // Flash
-        if (flash > 0.01) {
-            ctx.fillStyle = `rgba(255,255,255,${flash})`;
-            ctx.fillRect(0,0,width,height);
-        }
-
-        requestAnimationFrame(draw);
+        ctx.fill(); ctx.shadowBlur = 0;
+        particles.forEach(p => p.draw(ctx));
     }
-
-    // Run loops separately
-    setInterval(update, 1000 / 60); // 60 FPS Logic
-    requestAnimationFrame(draw); // Max FPS Draw
-
+    ctx.restore();
+    update(); requestAnimationFrame(draw);
+}
+draw();
 </script>
 </body>
 </html>
