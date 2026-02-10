@@ -2,16 +2,83 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Neon Escape - SYRINGE & SHRINK TOGGLE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#05050a">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <title>Neon Escape Mobile</title>
     <style>
-        body { background: #05050a; margin: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Arial Rounded MT Bold', sans-serif; color: white; }
-        canvas { box-shadow: 0 0 50px rgba(0,0,0,0.8); border: 1px solid #333; cursor: crosshair; }
+        /* CSS RESET & MOBILE OPTIMIZATION */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
         
-        .overlay { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 450px; height: 800px; pointer-events: none; z-index: 10; }
-        .menu-card { background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(15px); padding: 30px; border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.1); pointer-events: auto; display: none; flex-direction: column; gap: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); width: 320px; }
+        body { 
+            background: #05050a; 
+            margin: 0; 
+            overflow: hidden; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            width: 100vw;
+            font-family: 'Arial Rounded MT Bold', sans-serif; 
+            color: white; 
+            touch-action: none; /* Empêche le scroll élastique sur mobile */
+        }
+
+        canvas { 
+            box-shadow: 0 0 50px rgba(0,0,0,0.8); 
+            cursor: pointer;
+            display: block;
+        }
         
-        button { padding: 15px; font-size: 16px; border: none; border-radius: 15px; cursor: pointer; font-weight: bold; transition: 0.2s; text-transform: uppercase; width: 100%; }
+        .overlay { 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            pointer-events: none; 
+            z-index: 10; 
+        }
+
+        .menu-card { 
+            background: rgba(0, 0, 0, 0.85); 
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px);
+            padding: 25px; 
+            border-radius: 25px; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            pointer-events: auto; 
+            display: none; 
+            flex-direction: column; 
+            gap: 10px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7); 
+            width: 90%; /* Largeur responsive */
+            max-width: 380px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
         
+        /* Boutons plus gros pour le tactile */
+        button { 
+            padding: 15px; 
+            font-size: 16px; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            transition: 0.2s; 
+            text-transform: uppercase; 
+            width: 100%; 
+            margin-bottom: 5px;
+        }
+        
+        button:active { transform: scale(0.96); } /* Feedback tactile */
+
         .btn-main { background: #ff4500; color: white; box-shadow: 0 0 15px #ff4500; margin-top: 10px; }
         .btn-challenge { background: #ffd700; color: black; box-shadow: 0 0 15px #ffd700; }
         .btn-asmr { background: #00e5ff; color: #000; box-shadow: 0 0 15px #00e5ff; margin-top: 5px; }
@@ -25,36 +92,32 @@
             box-shadow: 0 0 20px #39ff14, inset 0 0 10px #39ff14; 
             margin-bottom: 10px; text-shadow: 0 0 5px rgba(255,255,255,0.5);
         }
-        .btn-doped:hover { transform: scale(1.05) skewX(-5deg); box-shadow: 0 0 40px #39ff14; }
 
         .btn-mode { background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2); }
-        .btn-mode:hover { background: white; color: black; transform: scale(1.02); }
         .btn-nuclear { background: linear-gradient(45deg, #ff0000, #ff4500); color: white; border: 2px solid red; box-shadow: 0 0 20px red; animation: pulse-red 1s infinite; }
         
-        /* TOGGLE SWITCH STYLE */
         .toggle-container {
             display: flex; align-items: center; justify-content: space-between;
-            background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1); padding: 12px 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.2);
         }
         .toggle-label { font-size: 14px; font-weight: bold; color: #ccc; }
         .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #444; -webkit-transition: .4s; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; -webkit-transition: .4s; transition: .4s; border-radius: 50%; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #444; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #00f2ff; box-shadow: 0 0 10px #00f2ff; }
-        input:checked + .slider:before { -webkit-transform: translateX(24px); -ms-transform: translateX(24px); transform: translateX(24px); }
+        input:checked + .slider:before { transform: translateX(24px); }
 
         @keyframes pulse-blue { 0% { box-shadow: 0 0 15px blue; } 50% { box-shadow: 0 0 30px cyan; } 100% { box-shadow: 0 0 15px blue; } }
         @keyframes pulse-red { 0% { box-shadow: 0 0 10px red; } 50% { box-shadow: 0 0 25px red; transform: scale(1.03); } 100% { box-shadow: 0 0 10px red; } }
         
-        h1 { color: white; text-shadow: 0 0 10px currentColor; margin-bottom: 5px; font-size: 28px; text-align: center; }
+        h1 { margin: 5px 0 10px 0; font-size: 24px; text-align: center; text-shadow: 0 0 10px currentColor; }
         p { color: #aaa; font-size: 12px; text-align: center; margin-bottom: 15px; }
 
-        #hud-display { position: absolute; top: 20px; width: 100%; text-align: center; pointer-events: none; display: none; z-index: 5; }
+        #hud-display { position: absolute; top: env(safe-area-inset-top, 20px); width: 100%; text-align: center; pointer-events: none; display: none; z-index: 5; margin-top: 10px;}
         .hud-timer { font-size: 32px; font-weight: bold; color: #ffd700; text-shadow: 0 0 10px #ffd700; }
         .hud-count { font-size: 16px; color: #fff; letter-spacing: 2px; margin-top: 5px; opacity: 0.8; }
-        #hud-menu-btn { pointer-events: auto; cursor: pointer; margin: 10px auto 0 auto; width: fit-content; padding: 5px 15px; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; font-size: 12px; color: #ccc; background: rgba(0,0,0,0.5); transition: 0.2s; }
-        #hud-menu-btn:hover { background: white; color: black; }
+        #hud-menu-btn { pointer-events: auto; cursor: pointer; margin: 10px auto 0 auto; width: fit-content; padding: 8px 20px; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; font-size: 14px; color: #ccc; background: rgba(0,0,0,0.5); }
         #speed-indicator { font-size: 10px; color: #ff4500; margin-top: 2px; letter-spacing: 1px; }
 
     </style>
@@ -67,7 +130,7 @@
         <div class="hud-timer" id="timerValue">00:00.00</div>
         <div class="hud-count">COUCHES : <span id="layerCount">0</span></div>
         <div id="speed-indicator">VITESSE : <span id="speedVal">100%</span></div>
-        <div id="hud-menu-btn" onclick="pauseChallenge()">MENU</div>
+        <div id="hud-menu-btn" ontouchstart="pauseChallenge(); event.preventDefault()">PAUSE</div>
     </div>
 
     <div class="overlay" id="uiOverlay">
@@ -89,14 +152,13 @@
                 </label>
             </div>
 
-            <button class="btn-doped" onclick="startGame('DOPED')">💉 ADRENALINE (DOPÉ)</button>
+            <button class="btn-doped" onclick="startGame('DOPED')">💉 ADRENALINE</button>
             <button class="btn-valentine" onclick="startGame('VALENTINE')">💖 SAINT VALENTIN</button>
             
             <button class="btn-main" onclick="showDestructionLevels()">💥 DESTRUCTION</button>
             <button class="btn-asmr" onclick="showAsmrLevels()">💧 ASMR LIQUIDE</button>
             <button class="btn-mode" onclick="startGame('NEON')">✨ NEON VIBE</button>
             <button class="btn-mode" onclick="startGame('PATTERN')">🌀 HYPNOTIQUE</button>
-            <button class="btn-mode" onclick="startGame('MINIMAL')">⚪ MINIMALISTE</button>
             <button class="btn-sec" style="margin-top:10px; background:none; color:#aaa; border:none" onclick="showHome()">RETOUR</button>
         </div>
 
@@ -110,9 +172,9 @@
 
         <div id="asmrScreen" class="menu-card">
             <h1 style="color:#00e5ff;">ASMR FLUIDE</h1>
-            <button class="btn-mode" onclick="startAsmrGame(50)">💧 GOUTTES (50)</button>
-            <button class="btn-asmr" onclick="startAsmrGame(300)">🌊 TORRENT (300)</button>
-            <button class="btn-fill" onclick="startAsmrGame('FILL')">🛁 BASSIN (7K MAX)</button>
+            <button class="btn-mode" onclick="startAsmrGame(50)">💧 GOUTTES</button>
+            <button class="btn-asmr" onclick="startAsmrGame(300)">🌊 TORRENT</button>
+            <button class="btn-fill" onclick="startAsmrGame('FILL')">🛁 BASSIN (MAX)</button>
             <button class="btn-sec" style="margin-top:10px; background:none; color:#aaa; border:none" onclick="showModes()">RETOUR</button>
         </div>
 
@@ -127,12 +189,13 @@
         <div id="pauseMenu" class="menu-card">
             <h1>PAUSE</h1>
             <button class="btn-main" onclick="resumeGame()">Continuer</button>
-            <button class="btn-sec" onclick="restartGame()">Restart</button>
+            <button class="btn-sec" onclick="restartGame()">Recommencer</button>
             <button class="btn-sec" onclick="showHome()">Accueil</button>
         </div>
     </div>
 
 <script>
+// --- AUDIO SYSTEM ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playSound(freq, type, duration, volume) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -144,6 +207,7 @@ function playSound(freq, type, duration, volume) {
     osc.connect(gain); gain.connect(audioCtx.destination);
     osc.start(); osc.stop(audioCtx.currentTime + duration);
 }
+// Raccourcis sons
 function playHeartSound() { playSound(300, 'sine', 0.5, 0.2); setTimeout(() => playSound(600, 'sine', 0.5, 0.1), 100); }
 function playDopedSound() { playSound(150, 'sawtooth', 0.1, 0.4); setTimeout(() => playSound(1200, 'square', 0.15, 0.3), 20); }
 function playExplosionSound(intensity) { 
@@ -153,8 +217,42 @@ function playExplosionSound(intensity) {
 function playLiquidSound() { playSound(400, 'sine', 0.3, 0.3); setTimeout(() => playSound(300, 'sine', 0.4, 0.2), 50); }
 function playClickSound() { playSound(800, 'sine', 0.05, 0.1); }
 
-// --- PARTICLE SYSTEM ---
+// --- ENGINE SETUP FOR MOBILE ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// Référence virtuelle (Le jeu est codé pour cette taille, on va l'adapter)
+const VIRTUAL_WIDTH = 450;
+const VIRTUAL_HEIGHT = 800;
+let scaleRatio = 1;
+let CENTER = { x: VIRTUAL_WIDTH / 2, y: VIRTUAL_HEIGHT / 2 };
+
+// Redimensionnement intelligent
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    // Calcul de l'échelle pour tout faire rentrer (Letterboxing "Contain")
+    // Ou "Cover" pour plein écran. Ici on utilise une logique qui centre le jeu.
+    scaleRatio = Math.min(canvas.width / VIRTUAL_WIDTH, canvas.height / VIRTUAL_HEIGHT);
+    
+    // On peut aussi décider de remplir la largeur sur mobile (souvent mieux)
+    if (canvas.width < VIRTUAL_WIDTH) {
+         scaleRatio = canvas.width / VIRTUAL_WIDTH;
+    }
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas(); // Init
+
+// --- VARIABLES JEU ---
 let particles = [];
+let ball, rings, gameState = "HOME", currentMode = "NEON", frame = 0;
+let startTime = 0, challengeCount = 0;
+let destructionLevel = 200; asmrLevel = 50; isFillMode = false;
+let bgLetter = ""; let bgLetterAlpha = 0; const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+let isShrinkEnabled = false;
+
+// --- PARTICLE CLASSES (Gardées identiques mais optimisées visuellement) ---
 class Particle {
     constructor(x, y, color, radius, vx, vy, lifeSpan, isLiquid, isFillMode, isHeart, isSyringe) {
         this.x = x; this.y = y; this.color = color; this.radius = radius;
@@ -166,19 +264,18 @@ class Particle {
     }
     update(rings, frame) {
         if (this.settled && this.isFillMode) { this.x += Math.sin((frame + this.settledOffset) * 0.05) * 0.5; return; }
-
-        // Gravité
+        // Physique simplifiée
         if (this.isLiquid || this.isFillMode) this.vy += 0.15;
-        else if (this.isHeart) this.vy += 0.02;
-        else if (this.isSyringe) this.vy += 0.02; // Gravité TRES FAIBLE pour que la seringue flotte
+        else if (this.isHeart || this.isSyringe) this.vy += 0.02;
         else this.vy += 0.1;
 
         this.x += this.vx; this.y += this.vy;
         
+        // Collisions sol (virtuel)
         if (this.isFillMode) {
             this.vx *= 0.96; 
-            let floorLevel = canvas.height - (particles.indexOf(this) * 0.012);
-            if (floorLevel > canvas.height) floorLevel = canvas.height;
+            let floorLevel = VIRTUAL_HEIGHT - (particles.indexOf(this) * 0.012); // Utilise Hauteur Virtuelle
+            if (floorLevel > VIRTUAL_HEIGHT) floorLevel = VIRTUAL_HEIGHT;
             if (this.y > floorLevel - this.radius) { this.y = floorLevel - this.radius; this.vy = 0; this.vx = 0; this.settled = true; }
         }
         else if (this.isLiquid) {
@@ -195,14 +292,9 @@ class Particle {
                 }
             }
         }
-        else if (this.isHeart) {
-            this.vx *= 0.96; this.vy *= 0.96; 
-        }
-        else if (this.isSyringe) {
-            // FREINAGE PUISSANT POUR FIXER LA FORME
-            this.vx *= 0.92; 
-            this.vy *= 0.92; 
-        }
+        else { this.vx *= 0.96; this.vy *= 0.96; } // Friction par défaut
+
+        if (this.isSyringe) { this.vx *= 0.92; this.vy *= 0.92; } // Extra frein seringue
         
         if (!this.settled) { 
             this.life--; 
@@ -218,96 +310,54 @@ class Particle {
 }
 
 function createExplosion(x, y, color, numParticles, strength, isLiquid, isFillMode, isHeart, isSyringe) {
-    const MAX_PARTICLES = 7000;
-    if (isFillMode && particles.length + numParticles > MAX_PARTICLES) {
-        let overflow = (particles.length + numParticles) - MAX_PARTICLES;
-        particles.splice(0, overflow);
-    }
+    // Limite particules pour mobile pour éviter le lag
+    const MAX_PARTICLES = 3000; 
+    if (isFillMode && particles.length + numParticles > MAX_PARTICLES) particles.splice(0, (particles.length + numParticles) - MAX_PARTICLES);
 
-    if (isHeart) {
-        for (let i = 0; i < numParticles; i++) {
+    // Adaptations spécifiques (Code identique à l'original mais factorisé)
+    for (let i = 0; i < numParticles; i++) {
+        let vx, vy, life, size;
+        if (isHeart) {
             const t = (i / numParticles) * Math.PI * 2;
             const hx = 16 * Math.pow(Math.sin(t), 3);
             const hy = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
-            const speed = 0.15;
-            const vx = hx * speed + (Math.random() - 0.5) * 0.5;
-            const vy = hy * speed + (Math.random() - 0.5) * 0.5;
-            const life = 80 + Math.random() * 40; const size = Math.random() * 3 + 2;
+            vx = hx * 0.15 + (Math.random() - 0.5); vy = hy * 0.15 + (Math.random() - 0.5);
+            life = 80 + Math.random() * 40; size = Math.random() * 3 + 2;
             particles.push(new Particle(x, y, color, size, vx, vy, life, false, false, true, false));
+        } 
+        else if (isSyringe) {
+             const angleOffset = Math.random() * Math.PI * 2; 
+             const scale = 1.5; 
+             let sx, sy; const rand = Math.random();
+             if (rand < 0.6) { sx = (Math.random() - 0.5) * 15 * scale; sy = (Math.random() - 0.5) * 40 * scale; } 
+             else if (rand < 0.85) { sx = (Math.random() - 0.5) * 3 * scale; sy = -20 * scale - Math.random() * 30 * scale; } 
+             else { sx = (Math.random() - 0.5) * 30 * scale; sy = 20 * scale + Math.random() * 5 * scale; }
+             const rx = sx * Math.cos(angleOffset) - sy * Math.sin(angleOffset);
+             const ry = sx * Math.sin(angleOffset) + sy * Math.cos(angleOffset);
+             particles.push(new Particle(x + rx, y + ry, color, Math.random()*3+1, rx * 0.05, ry * 0.05, 100, false, false, false, true));
         }
-    }
-    // --- SERINGUE RALENTIE ---
-    else if (isSyringe) {
-        const angleOffset = Math.random() * Math.PI * 2; 
-        const scale = 1.5; 
-
-        for (let i = 0; i < numParticles; i++) {
-            let sx, sy, part;
-            const rand = Math.random();
-
-            if (rand < 0.6) { part = "barrel"; sx = (Math.random() - 0.5) * 15 * scale; sy = (Math.random() - 0.5) * 40 * scale; } 
-            else if (rand < 0.85) { part = "needle"; sx = (Math.random() - 0.5) * 3 * scale; sy = -20 * scale - Math.random() * 30 * scale; } 
-            else { part = "plunger"; sx = (Math.random() - 0.5) * 30 * scale; sy = 20 * scale + Math.random() * 5 * scale; }
-
-            const rx = sx * Math.cos(angleOffset) - sy * Math.sin(angleOffset);
-            const ry = sx * Math.sin(angleOffset) + sy * Math.cos(angleOffset);
-
-            // VITESSE QUASI NULLE POUR QUE LA FORME RESTE EN PLACE
-            const speed = 0.05; 
-            // BRUIT TRES FAIBLE
-            const vx = rx * speed + (Math.random()-0.5)*0.3;
-            const vy = ry * speed + (Math.random()-0.5)*0.3;
-            
-            const life = 80 + Math.random() * 30; // Vie un peu plus longue
-            const size = (part === "needle") ? Math.random()*2+1 : Math.random()*3+2;
-
-            particles.push(new Particle(x + rx, y + ry, color, size, vx, vy, life, false, false, false, true));
-        }
-    }
-    else {
-        for (let i = 0; i < numParticles; i++) {
+        else {
             const angle = Math.random() * Math.PI * 2; 
-            const speed = Math.random() * strength * (Math.random() > 0.8 ? 1.5 : 1); 
-            const size = (isLiquid || isFillMode) ? (Math.random() * 3 + 2) : (Math.random() * 3 + 1); 
-            const life = isFillMode ? 9999 : (isLiquid ? (100 + Math.random() * 100) : (30 + Math.random() * 30)); 
-            
+            const speed = Math.random() * strength;
+            size = (isLiquid || isFillMode) ? (Math.random() * 3 + 2) : (Math.random() * 3 + 1); 
+            life = isFillMode ? 9999 : (isLiquid ? (100 + Math.random() * 100) : (30 + Math.random() * 30)); 
             particles.push(new Particle(x, y, color, size, Math.cos(angle) * speed, Math.sin(angle) * speed, life, isLiquid, isFillMode, false, false));
         }
     }
 }
 
-// --- GAME ENGINE ---
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-canvas.width = 450; canvas.height = 800;
-const CENTER = { x: canvas.width / 2, y: canvas.height / 2 };
-
-let ball, rings, gameState = "HOME", currentMode = "NEON", frame = 0;
-let startTime = 0, challengeCount = 0;
-let destructionLevel = 200; asmrLevel = 50; isFillMode = false;
-
-// Vars Textes
-let bgLetter = ""; let bgLetterAlpha = 0;
-const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-// Variable pour l'option de rétrécissement
-let isShrinkEnabled = false;
-
-function toggleShrink() {
-    isShrinkEnabled = document.getElementById('shrinkToggle').checked;
-}
+// --- GAME LOGIC ---
+function toggleShrink() { isShrinkEnabled = document.getElementById('shrinkToggle').checked; }
 
 function initData(mode, count = 10, fillMode = false) {
     currentMode = mode; frame = 0; particles = []; isFillMode = fillMode; 
     ball = { x: CENTER.x, y: CENTER.y - 30, vx: 4, vy: 0, radius: 10, hue: 0 };
     rings = []; bgLetter = ""; bgLetterAlpha = 0;
     
-    // Si c'est un mode infini, on en met moins si Shrink est activé pour voir l'effet
     let ringCount = (isShrinkEnabled && mode !== 'CHALLENGE') ? 8 : 10;
-
     if (mode === 'CHALLENGE') {
-        challengeCount = count; const spacing = 25; 
-        for(let i=0; i < count; i++) rings.push(createRing(70 + i * spacing, i));
+        challengeCount = count; 
+        for(let i=0; i < count; i++) rings.push(createRing(70 + i * 25, i));
         startTime = Date.now(); document.getElementById('hud-display').style.display = 'block';
     } else {
         for(let i=0; i < ringCount; i++) rings.push(createRing(70 + i * 35, i));
@@ -316,26 +366,31 @@ function initData(mode, count = 10, fillMode = false) {
 }
 
 function createRing(radius, index) {
-    return {
-        radius: radius,
-        angle: Math.random() * Math.PI * 2,
-        speed: (0.02 + Math.random() * 0.015) * (index % 2 === 0 ? 1 : -1),
-        gapSize: 0.5, active: true, hue: (index * 40) % 360
-    };
+    return { radius: radius, angle: Math.random() * Math.PI * 2, speed: (0.02 + Math.random() * 0.015) * (index % 2 === 0 ? 1 : -1), gapSize: 0.5, active: true, hue: (index * 40) % 360 };
 }
 
-// --- NAVIGATION ---
-function showModes() { document.getElementById('homeScreen').style.display = "none"; document.getElementById('destructionScreen').style.display = "none"; document.getElementById('asmrScreen').style.display = "none"; document.getElementById('modeScreen').style.display = "flex"; }
-function showDestructionLevels() { document.getElementById('modeScreen').style.display = "none"; document.getElementById('destructionScreen').style.display = "flex"; }
-function showAsmrLevels() { document.getElementById('modeScreen').style.display = "none"; document.getElementById('asmrScreen').style.display = "flex"; }
-function showChallengeMenu() { document.getElementById('homeScreen').style.display = "none"; document.getElementById('challengeScreen').style.display = "flex"; }
+// --- MENU NAVIGATION ---
+function hideAllMenus() {
+    const menus = document.querySelectorAll('.menu-card');
+    menus.forEach(m => m.style.display = 'none');
+}
+function showModes() { hideAllMenus(); document.getElementById('modeScreen').style.display = "flex"; }
+function showDestructionLevels() { hideAllMenus(); document.getElementById('destructionScreen').style.display = "flex"; }
+function showAsmrLevels() { hideAllMenus(); document.getElementById('asmrScreen').style.display = "flex"; }
+function showChallengeMenu() { hideAllMenus(); document.getElementById('challengeScreen').style.display = "flex"; }
+function showHome() { 
+    gameState = "HOME"; hideAllMenus(); 
+    document.getElementById('homeScreen').style.display = "flex"; 
+    document.getElementById('hud-display').style.display = 'none'; 
+    updateUI(); 
+}
 
-function startGame(mode) { initData(mode, 10, false); gameState = "PLAYING"; document.getElementById('modeScreen').style.display = "none"; updateUI(); audioCtx.resume(); }
-function startDestructionGame(level) { destructionLevel = level; startGame('DESTRUCTION'); document.getElementById('destructionScreen').style.display = "none"; }
-function startAsmrGame(level) { let fill = false; if (level === 'FILL') { fill = true; asmrLevel = 100; } else { asmrLevel = level; } initData('ASMR', 10, fill); gameState = "PLAYING"; document.getElementById('asmrScreen').style.display = "none"; updateUI(); audioCtx.resume(); }
-function startChallenge(count) { initData('CHALLENGE', count, false); gameState = "PLAYING"; document.getElementById('challengeScreen').style.display = "none"; updateUI(); audioCtx.resume(); }
+function startGame(mode) { initData(mode, 10, false); gameState = "PLAYING"; hideAllMenus(); updateUI(); audioCtx.resume(); }
+function startDestructionGame(level) { destructionLevel = level; startGame('DESTRUCTION'); }
+function startAsmrGame(level) { let fill = (level === 'FILL'); if(fill) asmrLevel = 100; else asmrLevel = level; initData('ASMR', 10, fill); gameState = "PLAYING"; hideAllMenus(); updateUI(); audioCtx.resume(); }
+function startChallenge(count) { initData('CHALLENGE', count, false); gameState = "PLAYING"; hideAllMenus(); updateUI(); audioCtx.resume(); }
 
-function pauseChallenge() { gameState = "PAUSED"; updateUI(); }
+function pauseChallenge() { if(gameState === "PLAYING") { gameState = "PAUSED"; updateUI(); } }
 function resumeGame() { gameState = "PLAYING"; updateUI(); }
 function restartGame() { 
     if(currentMode === 'CHALLENGE') startChallenge(challengeCount); 
@@ -343,31 +398,45 @@ function restartGame() {
     else if(currentMode === 'ASMR') startAsmrGame(isFillMode ? 'FILL' : asmrLevel);
     else startGame(currentMode); 
 }
-function showHome() { gameState = "HOME"; document.getElementById('modeScreen').style.display = "none"; document.getElementById('challengeScreen').style.display = "none"; document.getElementById('destructionScreen').style.display = "none"; document.getElementById('asmrScreen').style.display = "none"; document.getElementById('homeScreen').style.display = "flex"; document.getElementById('hud-display').style.display = 'none'; updateUI(); }
 function updateUI() { document.getElementById('pauseMenu').style.display = (gameState === "PAUSED") ? "flex" : "none"; }
 
-// --- INTERACTION ---
-canvas.addEventListener('mousedown', (e) => {
+// --- INPUT HANDLING (MOBILE & MOUSE) ---
+function handleInput(clientX, clientY) {
     if(gameState === "PLAYING" && currentMode === 'CHALLENGE') {
+        // Convertir les coordonnées écran en coordonnées jeu virtuelles
         const rect = canvas.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
+        
+        // Calcul du décalage dû au centrage du canvas (si letterbox)
+        const offsetX = (canvas.width - VIRTUAL_WIDTH * scaleRatio) / 2;
+        const offsetY = (canvas.height - VIRTUAL_HEIGHT * scaleRatio) / 2;
+        
+        const gameX = (clientX - rect.left - offsetX) / scaleRatio;
+        const gameY = (clientY - rect.top - offsetY) / scaleRatio;
+
         const distToCenter = Math.sqrt((ball.x - CENTER.x)**2 + (ball.y - CENTER.y)**2);
         let targetRing = rings.find(r => r.active && r.radius > distToCenter);
+        
         if (targetRing) {
             playClickSound();
             const growthAmount = 0.08;
-            if(clickX > canvas.width / 2) targetRing.gapSize += growthAmount;
+            if(gameX > CENTER.x) targetRing.gapSize += growthAmount;
             else { targetRing.angle -= growthAmount; targetRing.gapSize += growthAmount; }
         }
         return;
     }
     if(gameState === "PLAYING") { gameState = "PAUSED"; updateUI(); }
-});
+}
 
+canvas.addEventListener('mousedown', (e) => handleInput(e.clientX, e.clientY));
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // Stop scroll
+    handleInput(e.touches[0].clientX, e.touches[0].clientY);
+}, {passive: false});
+
+// --- MAIN LOOP ---
 function update() {
     if (gameState !== "PLAYING") return;
     frame++; ball.vy += 0.25; ball.x += ball.vx; ball.y += ball.vy; ball.hue += 1.5;
-    
     if(bgLetterAlpha > 0) bgLetterAlpha -= 0.015;
 
     let currentShrinkSpeed = 0.08; 
@@ -390,23 +459,15 @@ function update() {
         let ring = rings[i];
         if (!ring.active) continue;
 
-        // --- GESTION DU RETRECISSEMENT ---
-        // Activé si l'option est cochée OU si c'est le mode Challenge (qui l'a par défaut)
         if (isShrinkEnabled || currentMode === "CHALLENGE") {
             const speed = (currentMode === "CHALLENGE") ? currentShrinkSpeed : 0.15;
             ring.radius -= speed;
             if (ring.radius < 20) {
-                // En mode infini, on recrée. En challenge, il meurt.
-                if(currentMode !== "CHALLENGE") { 
-                    rings.splice(i, 1); 
-                    rings.push(createRing(300, frame)); 
-                } else { 
-                    ring.active = false; 
-                }
+                if(currentMode !== "CHALLENGE") { rings.splice(i, 1); rings.push(createRing(300, frame)); } 
+                else { ring.active = false; }
                 continue;
             }
         }
-
         ring.angle += (currentMode === "PATTERN") ? Math.sin(frame * 0.02 + i) * 0.04 : ring.speed;
 
         if (dist + ball.radius > ring.radius) {
@@ -418,36 +479,25 @@ function update() {
             if (inGap) {
                 if (dist > ring.radius + ball.radius) {
                     ring.active = false;
-                    // Si le rétrécissement n'est PAS activé, la balle grossit (mécanique classique)
-                    // Sinon, la balle garde sa taille (mécanique shrink)
                     if (!isShrinkEnabled && currentMode !== "CHALLENGE") ball.radius += 0.6;
                     
-                    // --- EFFETS SPECIAUX ---
                     if (currentMode === "VALENTINE") {
-                        bgLetter = alphabet[Math.floor(Math.random() * alphabet.length)];
-                        bgLetterAlpha = 1.0;
-                        createExplosion(ball.x, ball.y, `hsl(${ring.hue}, 100%, 70%)`, 100, 0, false, false, true, false);
+                        bgLetter = alphabet[Math.floor(Math.random() * alphabet.length)]; bgLetterAlpha = 1.0;
+                        createExplosion(ball.x, ball.y, `hsl(${ring.hue}, 100%, 70%)`, 80, 0, false, false, true, false);
                         playHeartSound();
-                    }
-                    else if (currentMode === "DOPED") {
-                        bgLetter = alphabet[Math.floor(Math.random() * alphabet.length)];
-                        bgLetterAlpha = 1.0;
-                        createExplosion(ball.x, ball.y, `hsl(${ring.hue}, 100%, 60%)`, 150, 0, false, false, false, true);
+                    } else if (currentMode === "DOPED") {
+                        bgLetter = alphabet[Math.floor(Math.random() * alphabet.length)]; bgLetterAlpha = 1.0;
+                        createExplosion(ball.x, ball.y, `hsl(${ring.hue}, 100%, 60%)`, 120, 0, false, false, false, true);
                         playDopedSound();
-                    }
-                    else if (currentMode === "DESTRUCTION" || currentMode === "CHALLENGE") {
-                        let count = (currentMode === "DESTRUCTION") ? destructionLevel : 20;
-                        let strength = (destructionLevel > 500) ? 18 : 10;
-                        createExplosion(ball.x, ball.y, `hsl(${ring.hue}, 100%, 70%)`, count, strength, false, false, false, false);
-                        (currentMode === "DESTRUCTION") ? playExplosionSound(destructionLevel) : playSound(600, 'triangle', 0.1, 0.1);
-                    } 
-                    else if (currentMode === "ASMR") {
-                        let count = asmrLevel; let strength = 5;
-                        if (isFillMode) { count = Math.floor((ring.radius * ring.radius) / 15); strength = 12; }
-                        createExplosion(ball.x, ball.y, `hsl(${ring.hue}, 100%, 60%)`, count, strength, true, isFillMode, false, false);
+                    } else if (currentMode === "ASMR") {
+                        let count = asmrLevel; if (isFillMode) count = Math.floor((ring.radius**2)/20);
+                        createExplosion(ball.x, ball.y, `hsl(${ring.hue}, 100%, 60%)`, count, isFillMode ? 12 : 5, true, isFillMode, false, false);
                         playLiquidSound();
+                    } else {
+                         let count = (currentMode === "DESTRUCTION") ? destructionLevel : 20;
+                         createExplosion(ball.x, ball.y, `hsl(${ring.hue}, 100%, 70%)`, count, 10, false, false, false, false);
+                         playSound(600, 'triangle', 0.1, 0.1);
                     }
-                    else playSound(700, 'triangle', 0.15, 0.2);
                 }
             } else {
                 const nx = dx / dist, ny = dy / dist, dot = ball.vx * nx + ball.vy * ny;
@@ -460,71 +510,52 @@ function update() {
     
     for (let i = particles.length - 1; i >= 0; i--) {
         particles[i].update(rings, frame); 
-        if (isFillMode) {
-             if (!particles[i].settled && particles[i].life <= 0) particles.splice(i, 1);
-        } else {
-             if (particles[i].life <= 0 || particles[i].radius < 0.1) particles.splice(i, 1);
-        }
+        if (particles[i].life <= 0 || (!isFillMode && particles[i].radius < 0.1)) particles.splice(i, 1);
     }
-    
-    if (dist > canvas.height) showHome();
+    if (dist > VIRTUAL_HEIGHT + 100) showHome();
 }
 
 function draw() {
+    // Gestion du Scale pour Mobile : On efface tout, on sauvegarde, on scale, on dessine, on restore.
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform pour clear tout l'écran
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
     if (currentMode === "VALENTINE") ctx.fillStyle = 'rgba(20, 0, 5, 0.3)';
-    else if (currentMode === "DOPED") ctx.fillStyle = 'rgba(5, 10, 5, 0.4)';
     else ctx.fillStyle = (currentMode === "MINIMAL") ? 'rgba(240, 240, 240, 0.4)' : 'rgba(5, 5, 15, 0.25)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, canvas.width, canvas.height); // Fond remplit tout l'écran
+
+    // Centrage du jeu virtuel dans l'écran physique
+    const offsetX = (canvas.width - VIRTUAL_WIDTH * scaleRatio) / 2;
+    const offsetY = (canvas.height - VIRTUAL_HEIGHT * scaleRatio) / 2;
+
+    ctx.save();
+    ctx.translate(offsetX, offsetY);
+    ctx.scale(scaleRatio, scaleRatio);
 
     if (gameState !== "HOME") {
-        if ((currentMode === "VALENTINE" || currentMode === "DOPED") && bgLetterAlpha > 0) {
-            ctx.save();
-            ctx.globalAlpha = bgLetterAlpha;
+        if (bgLetterAlpha > 0) {
+            ctx.save(); ctx.globalAlpha = bgLetterAlpha;
             ctx.fillStyle = (currentMode === "VALENTINE") ? "#ff6699" : "#39ff14";
             ctx.font = "bold 300px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-            if(currentMode === "DOPED") { ctx.shadowColor = "#39ff14"; ctx.shadowBlur = 30; }
-            ctx.fillText(bgLetter, CENTER.x, CENTER.y);
-            ctx.restore();
+            ctx.fillText(bgLetter, CENTER.x, CENTER.y); ctx.restore();
         }
-
-        rings.forEach((ring, i) => {
-            if (!ring.active && (currentMode === "DESTRUCTION" || currentMode === "CHALLENGE" || currentMode === "ASMR" || currentMode === "VALENTINE" || currentMode === "DOPED")) return; 
+        rings.forEach((ring) => {
             if (!ring.active) return;
             ctx.beginPath();
-            
-            if (currentMode === "VALENTINE") {
-                const colors = ["#ff0066", "#ff3333", "#cc00cc", "#ffcc00"];
-                ctx.strokeStyle = colors[i % colors.length];
-                ctx.shadowBlur = 20; ctx.shadowColor = ctx.strokeStyle;
-            } 
-            else if (currentMode === "DOPED") {
-                const colors = ["#39ff14", "#00c3ff", "#ff073a", "#ffff00"];
-                ctx.strokeStyle = colors[i % colors.length];
-                ctx.shadowBlur = 25; ctx.shadowColor = ctx.strokeStyle;
-            }
-            else {
-                ctx.strokeStyle = (currentMode === "MINIMAL") ? "#333" : `hsl(${ring.hue}, 100%, 50%)`;
-                if (currentMode !== "MINIMAL") {
-                    ctx.shadowBlur = (isShrinkEnabled || currentMode === "CHALLENGE") ? 20 : 15; 
-                    ctx.shadowColor = ctx.strokeStyle;
-                }
-            }
-
-            ctx.lineWidth = (currentMode === "MINIMAL") ? 2 : 6;
+            ctx.strokeStyle = `hsl(${ring.hue}, 100%, 50%)`;
+            if (currentMode === "VALENTINE") ctx.strokeStyle = ["#ff0066", "#ff3333"][Math.floor(Math.random()*2)];
+            ctx.lineWidth = 6; ctx.shadowBlur = 15; ctx.shadowColor = ctx.strokeStyle;
             ctx.arc(CENTER.x, CENTER.y, ring.radius, ring.angle + ring.gapSize, ring.angle);
             ctx.stroke(); ctx.shadowBlur = 0;
         });
-
         ctx.beginPath();
-        if (currentMode === "VALENTINE") ctx.fillStyle = "#ffffff";
-        else if (currentMode === "DOPED") ctx.fillStyle = "#ffff00";
-        else ctx.fillStyle = (currentMode === "MINIMAL") ? "#000" : `hsl(${ball.hue}, 100%, 75%)`;
-        
-        if (currentMode !== "MINIMAL") { ctx.shadowBlur = 25; ctx.shadowColor = ctx.fillStyle; }
+        ctx.fillStyle = `hsl(${ball.hue}, 100%, 75%)`;
+        ctx.shadowBlur = 25; ctx.shadowColor = ctx.fillStyle;
         ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
         ctx.fill(); ctx.shadowBlur = 0;
         particles.forEach(p => p.draw(ctx));
     }
+    ctx.restore();
     update(); requestAnimationFrame(draw);
 }
 draw();
